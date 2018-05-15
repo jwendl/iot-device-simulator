@@ -60,6 +60,8 @@ Global
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{E5CC921F-D948-4B42-9452-763C5D909026}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{E5CC921F-D948-4B42-9452-763C5D909026}.Debug|Any CPU.Build.0 = Debug|x64
+		{E5CC921F-D948-4B42-9452-763C5D909026}.Debug|Any CPU.Deploy.0 = Debug|x64
 		{E5CC921F-D948-4B42-9452-763C5D909026}.Debug|x64.ActiveCfg = Debug|x64
 		{E5CC921F-D948-4B42-9452-763C5D909026}.Debug|x64.Build.0 = Debug|x64
 		{E5CC921F-D948-4B42-9452-763C5D909026}.Debug|x64.Deploy.0 = Debug|x64
@@ -91,6 +93,8 @@ Global
 		{2A214341-21AF-499B-9B42-0B849BC7508C}.Release|x64.ActiveCfg = Release|x64
 		{2A214341-21AF-499B-9B42-0B849BC7508C}.Release|x64.Build.0 = Release|x64
 		{567BAEA4-1F28-4A83-B7C8-99B93399438C}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{567BAEA4-1F28-4A83-B7C8-99B93399438C}.Debug|Any CPU.Build.0 = Debug|x64
+		{567BAEA4-1F28-4A83-B7C8-99B93399438C}.Debug|Any CPU.Deploy.0 = Debug|x64
 		{567BAEA4-1F28-4A83-B7C8-99B93399438C}.Debug|x64.ActiveCfg = Debug|x64
 		{567BAEA4-1F28-4A83-B7C8-99B93399438C}.Debug|x64.Build.0 = Debug|x64
 		{567BAEA4-1F28-4A83-B7C8-99B93399438C}.Debug|x64.Deploy.0 = Debug|x64
@@ -106,6 +110,8 @@ Global
 		{AB7BBA9B-422F-49F0-BF91-7E6F03DD95A6}.Release|x64.ActiveCfg = Release|x64
 		{AB7BBA9B-422F-49F0-BF91-7E6F03DD95A6}.Release|x64.Build.0 = Release|x64
 		{80A363B6-26B7-49CC-A5E8-39C3D6171E7A}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{80A363B6-26B7-49CC-A5E8-39C3D6171E7A}.Debug|Any CPU.Build.0 = Debug|x64
+		{80A363B6-26B7-49CC-A5E8-39C3D6171E7A}.Debug|Any CPU.Deploy.0 = Debug|x64
 		{80A363B6-26B7-49CC-A5E8-39C3D6171E7A}.Debug|x64.ActiveCfg = Debug|x64
 		{80A363B6-26B7-49CC-A5E8-39C3D6171E7A}.Debug|x64.Build.0 = Debug|x64
 		{80A363B6-26B7-49CC-A5E8-39C3D6171E7A}.Debug|x64.Deploy.0 = Debug|x64
@@ -139,7 +145,7 @@ Global
 		{F04B8328-6536-4D66-B354-61DF16369606} = {E169114A-0904-4FA4-B7D2-95ADD5EAD996}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		EnterpriseLibraryConfigurationToolBinariesPathV6 = packages\EnterpriseLibrary.TransientFaultHandling.6.0.1304.0\lib\portable-net45+win+wp8
 		SolutionGuid = {948E18A9-E088-41C4-B526-61ABAFF644FB}
+		EnterpriseLibraryConfigurationToolBinariesPathV6 = packages\EnterpriseLibrary.TransientFaultHandling.6.0.1304.0\lib\portable-net45+win+wp8
 	EndGlobalSection
 EndGlobal
