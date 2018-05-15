@@ -1,0 +1,12 @@
+{
+    "initialState": {
+      "temperature": {
+        "min": 45,
+        "max": 70
+      },
+      "humidity": {
+        "min": 10,
+        "max": 25
+      }
+    }
+  }

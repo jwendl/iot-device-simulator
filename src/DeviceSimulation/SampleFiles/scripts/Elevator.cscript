@@ -1,0 +1,141 @@
+﻿class InitialState
+{
+    [JsonProperty("floor")]
+    public int Floor { get; set; }
+    [JsonProperty("doorstate")]
+    public int DoorState { get; set; }
+    [JsonProperty("direction")]
+    public int Direction { get; set; }
+    [JsonProperty("weight")]
+    public int Weight { get; set; }
+    [JsonProperty("secondsinservice")]
+    public int SecondsInService { get; set; }
+}
+
+class ElevatorState
+{
+    public PreviousState PreviousState { get; set; }
+    public CurrentState CurrentState { get; set; }
+    public InitialState InitialState { get; set; }
+}
+
+class PreviousState
+{
+    public int Floor { get; set; }
+    public int Direction { get; set; }
+    public int DoorState { get; set; }
+    public int Weight { get; set; }
+    public int SecondsInService { get; set; }
+}
+
+class CurrentState
+{
+    public int Floor { get; set; }
+    public int Direction { get; set; }
+    public int DoorState { get; set; }
+    public int Weight { get; set; }
+    public int SecondsInService { get; set; }
+}
+
+int GetRandomNumber(int minimum, int maximum)
+{
+    var random = new Random();
+    return random.Next() * (maximum - minimum) + minimum;
+}
+
+var globalState = JsonConvert.DeserializeObject<ElevatorState>(GlobalState);
+
+if (globalState.PreviousState == null)
+{
+    globalState.PreviousState = new PreviousState()
+    {
+        Floor = globalState.InitialState.Floor,
+        Direction = globalState.InitialState.Direction,
+        DoorState = globalState.InitialState.DoorState,
+        Weight = globalState.InitialState.Weight,
+        SecondsInService = globalState.InitialState.SecondsInService
+    };
+}
+
+if (globalState.CurrentState != null)
+{
+    globalState.PreviousState.Floor = globalState.CurrentState.Floor;
+    globalState.PreviousState.Direction = globalState.CurrentState.Direction;
+    globalState.PreviousState.DoorState = globalState.CurrentState.DoorState;
+    globalState.PreviousState.Weight = globalState.CurrentState.Weight;
+    globalState.PreviousState.SecondsInService = globalState.CurrentState.SecondsInService;
+}
+else
+    globalState.CurrentState = new CurrentState();
+
+int prevFloor = globalState.PreviousState.Floor;
+int direction = globalState.PreviousState.Direction;
+int prevDoor = globalState.PreviousState.DoorState;
+
+if (prevFloor == 1 && prevDoor == 0)
+{
+    globalState.CurrentState.Floor = 1;
+    globalState.CurrentState.DoorState = 1;
+    globalState.CurrentState.Weight = 300;
+    globalState.CurrentState.Direction = 0;
+}
+
+if (prevFloor != 7 && prevDoor == 1 && direction == 0)
+{
+    globalState.CurrentState.Floor = globalState.PreviousState.Floor += 1;
+}
+
+if (prevFloor == 4 && prevDoor == 0 && direction == 0)
+{
+    globalState.CurrentState.Floor = 4;
+    globalState.CurrentState.DoorState = 1;
+    globalState.CurrentState.Weight = globalState.PreviousState.Weight += 150;
+}
+
+if (prevFloor == 6 && prevDoor == 1 && direction == 0)
+{
+    globalState.CurrentState.Floor = 7;
+    globalState.CurrentState.DoorState = 0;
+    globalState.CurrentState.Weight = 0;
+}
+
+if (prevFloor == 7 && prevDoor == 0)
+{
+    globalState.CurrentState.Floor = 7;
+    globalState.CurrentState.DoorState = 1;
+    globalState.CurrentState.Weight = 300;
+    globalState.CurrentState.Direction = 1;
+}
+
+if (prevFloor != 1 && prevDoor == 1 && direction == 1)
+{
+    globalState.CurrentState.Floor = globalState.PreviousState.Floor -= 1;
+}
+
+if (prevFloor == 4 && direction == 1)
+{
+    globalState.CurrentState.Floor = 5;
+    globalState.CurrentState.DoorState = 1;
+    globalState.CurrentState.Weight = globalState.PreviousState.Weight += 150;
+}
+
+if (prevFloor == 3 && direction == 1)
+{
+    globalState.CurrentState.Floor = 2;
+    globalState.CurrentState.DoorState = 1;
+    globalState.CurrentState.Weight = globalState.PreviousState.Weight += 150;
+}
+
+if (prevFloor == 2 && direction == 1)
+{
+    globalState.CurrentState.Floor = 1;
+    globalState.CurrentState.DoorState = 0;
+    globalState.CurrentState.Weight = 0;
+}
+
+globalState.CurrentState.SecondsInService = globalState.PreviousState.SecondsInService += 5;
+
+
+var json = JsonConvert.SerializeObject(globalState.CurrentState);
+return json;
+    

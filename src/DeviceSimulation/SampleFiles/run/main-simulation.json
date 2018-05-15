@@ -1,0 +1,20 @@
+[
+  {
+    "Id": "a2da9567-ff24-4ab8-8b24-795a77139328",
+    "DevicePrefix": "SimulatedElevator",
+    "DeviceType": "Elevator",
+    "NumberOfDevices": 50000,
+    "Interval": 5,
+    "MessageType": "Telemetry",
+    "DeviceTransportType": "Amqp_WebSocket_Only"
+  },
+  {
+    "Id": "069003e7-e339-4afa-b5e6-a79794fac585",
+    "DevicePrefix": "SimulatedFridge",
+    "DeviceType": "Fridge",
+    "NumberOfDevices": 50000,
+    "Interval": 5,
+    "MessageType": "Telemetry",
+    "DeviceTransportType": "Amqp_WebSocket_Only"
+  }
+]

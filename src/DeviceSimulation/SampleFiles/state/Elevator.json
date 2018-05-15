@@ -1,0 +1,9 @@
+{
+  "initialState": {
+    "floor": "1",
+    "doorstate": "0",
+    "direction": "0",
+    "weight": "0",
+    "secondsinservice": "432000"
+  }
+}

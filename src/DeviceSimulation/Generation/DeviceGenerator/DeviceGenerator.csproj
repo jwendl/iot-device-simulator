@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <IsServiceFabricServiceProject>True</IsServiceFabricServiceProject>
+    <RuntimeIdentifier>win7-x64</RuntimeIdentifier>
+    <Platforms>AnyCPU;x64</Platforms>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.6" />
+    <PackageReference Include="Microsoft.ServiceFabric.AspNetCore.Kestrel" Version="3.0.480" />
+    <PackageReference Include="Microsoft.ServiceFabric" Version="6.1.480" />
+    <PackageReference Include="Microsoft.ServiceFabric.Actors" Version="3.0.480" />
+    <PackageReference Include="Microsoft.ServiceFabric.Data" Version="3.0.480" />
+    <PackageReference Include="Microsoft.ServiceFabric.Services" Version="3.0.480" />
+
+    <PackageReference Include="Newtonsoft.Json" Version="11.0.1" />
+
+    <PackageReference Include="Polly" Version="5.9.0" />
+
+    <PackageReference Include="System.Threading.Tasks.Dataflow" Version="4.8.0" />
+    <PackageReference Include="WindowsAzure.Storage" Version="9.1.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <DotNetCliToolReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Tools" Version="2.0.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Common\DeviceSimulation.Common\DeviceSimulation.Common.csproj" />
+  </ItemGroup>
+</Project>

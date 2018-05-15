@@ -1,0 +1,74 @@
+class MinMax
+{
+	[JsonProperty("min")]
+	public double Minimum { get; set; }
+	[JsonProperty("max")]
+	public double Maximum { get; set; }
+}
+
+class InitialState
+{
+	public MinMax Temperature { get; set; }
+	public MinMax Humidity { get; set; }
+}
+
+class FridgeState
+{
+	public PreviousState PreviousState { get; set; }
+	public CurrentState CurrentState { get; set; }
+	public InitialState InitialState { get; set; }
+}
+
+class PreviousState
+{
+	public double Temperature { get; set; }
+	public double Humidity { get; set; }
+}
+
+class CurrentState
+{
+	public double Temperature { get; set; }
+	public double Humidity { get; set; }
+}
+
+double GetRandomNumber(double minimum, double maximum)
+{
+	var random = new Random();
+	return random.NextDouble() * (maximum - minimum) + minimum;
+}
+
+var globalState = JsonConvert.DeserializeObject<FridgeState>(GlobalState);
+
+if (globalState.PreviousState == null)
+{
+	globalState.PreviousState = new PreviousState()
+	{
+		Temperature = GetRandomNumber(globalState.InitialState.Temperature.Minimum, globalState.InitialState.Temperature.Maximum),
+		Humidity = GetRandomNumber(globalState.InitialState.Humidity.Minimum, globalState.InitialState.Humidity.Maximum),
+	};
+}
+
+if (globalState.CurrentState != null)
+{
+	globalState.PreviousState.Temperature = globalState.CurrentState.Temperature;
+	globalState.PreviousState.Humidity = globalState.CurrentState.Humidity;
+}
+else
+	globalState.CurrentState = new CurrentState();
+
+var random = new Random();
+var oddEven = random.Next(1, 2) % 2 == 0;
+if (oddEven)
+	globalState.CurrentState.Temperature = globalState.PreviousState.Temperature + 1;
+else
+	globalState.CurrentState.Temperature = globalState.PreviousState.Temperature - 1;
+
+oddEven = random.Next(1, 2) % 2 == 0;
+if (oddEven)
+	globalState.CurrentState.Humidity = globalState.PreviousState.Humidity + 1;
+else
+	globalState.CurrentState.Humidity = globalState.PreviousState.Humidity - 1;
+
+var json = JsonConvert.SerializeObject(globalState.CurrentState);
+return json;
+	

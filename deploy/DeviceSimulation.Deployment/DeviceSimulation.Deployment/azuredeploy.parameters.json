@@ -1,0 +1,27 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "storageAccountName": {
+      "value": "jwiotstorage"
+    },
+    "clusterName": {
+      "value": "jwiotcluster"
+    },
+    "adminUserName": {
+      "value": "jwendl"
+    },
+    "adminPassword": {
+      "value": "P@$$W0rd!"
+    },
+    "clusterInstanceCount": {
+      "value": 10
+    },
+    "clusterReliabilityLevel": {
+      "value": "Platinum"
+    },
+    "clusterNodeSize": {
+      "value": "Standard_D1_v2"
+    }
+  }
+}
