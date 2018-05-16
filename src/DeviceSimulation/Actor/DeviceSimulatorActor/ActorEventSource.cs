@@ -95,8 +95,7 @@ namespace DeviceSimulator
                     simulationId,
                     simulationName,
                     deviceName,
-                    deviceType,
-                    "iothub");
+                    deviceType);
             }
         }
 
@@ -133,8 +132,7 @@ namespace DeviceSimulator
                     simulationId,
                     simulationName,
                     deviceName,
-                    deviceType,
-                    "iothub");
+                    deviceType);
             }
         }
 
@@ -200,7 +198,7 @@ namespace DeviceSimulator
         {
             if (this.IsEnabled())
             {
-                WriteEvent(DeviceConnectedEventId,
+                WriteEvent(DeviceFailedConnectionEventId,
                     serviceName,
                     serviceTypeName,
                     replicaId,

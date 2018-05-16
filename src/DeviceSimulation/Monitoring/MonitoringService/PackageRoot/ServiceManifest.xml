@@ -6,7 +6,7 @@
                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <ServiceTypes>
     <!-- This is the name of your ServiceType. 
-         This name must match the string used in the RegisterServiceAsync call in Program.cs. -->
+         This name must match the string used in RegisterServiceType call in Program.cs. -->
     <StatelessServiceType ServiceTypeName="MonitoringServiceType" />
   </ServiceTypes>
 

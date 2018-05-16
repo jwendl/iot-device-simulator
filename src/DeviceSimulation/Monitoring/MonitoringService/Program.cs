@@ -25,6 +25,12 @@ namespace MonitoringService
                     // Using termination event lets event flow clean up ETW system-level events
                     Console.CancelKeyPress += (sender, eventArgs) => Shutdown(diagnosticsPipeline, terminationEvent);
 
+                    AppDomain.CurrentDomain.UnhandledException += (sender, unhandledExceptionArgs) =>
+                    {
+                        ServiceEventSource.Current.UnhandledException(unhandledExceptionArgs.ExceptionObject?.ToString() ?? "(no exception information)");
+                        Shutdown(diagnosticsPipeline, terminationEvent);
+                    };
+
                     ServiceRuntime.RegisterServiceAsync("MonitoringServiceType",
                         context => new MonitoringService(context)).GetAwaiter().GetResult();
 
