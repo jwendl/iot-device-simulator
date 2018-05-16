@@ -7,6 +7,6 @@
   </Section>
   -->
   <Section Name="DiagnosticPipelineParameters">
-    <Parameter Name="ApplicationInsightsKey" Value=""/>
+    <Parameter Name="ApplicationInsightsKey" Value="7d88b669-2093-4be2-a46a-8efc4346318a"/>
   </Section>
 </Settings>
