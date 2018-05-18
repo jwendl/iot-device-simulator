@@ -5,7 +5,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.WindowsAzure.Storage;
 using Newtonsoft.Json;
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -58,24 +57,23 @@ namespace DeviceGenerator.Controllers
 
                 simulation.Script = deviceTypeDetails.simulationScript;
                 simulation.InitialState = deviceTypeDetails.initialStateJson;
-            }
 
-            var simulationId = Guid.NewGuid().ToString();
-            var simulationUniqueName = $"Simulation_{simulationId}";
+                var simulationUniqueName = $"Simulation_{simulation.Id}";
 
 #pragma warning disable CS4014 // Fire off the running of the simulation on a background thread and don't await that, instead we manually observe any possible exceptions using ContinueWith
-            Task.Run(() =>
-            {
-                simulationManagerService.RunSimulationAsync(simulationId, simulationUniqueName, simulations, simulationIoTHubOptions.Value);
-            }).ContinueWith(
-                t =>
+                Task.Run(() =>
                 {
-                    logger.LogError(t.Exception, $"Exception thrown when running simulation {simulationUniqueName}");
-                },
-                TaskContinuationOptions.OnlyOnFaulted);
+                    simulationManagerService.RunSimulationAsync(simulation.Id.ToString(), simulationUniqueName, simulations, simulationIoTHubOptions.Value);
+                }).ContinueWith(
+                    t =>
+                    {
+                        logger.LogError(t.Exception, $"Exception thrown when running simulation {simulationUniqueName}");
+                    },
+                    TaskContinuationOptions.OnlyOnFaulted);
 #pragma warning restore CS4014
+            }
 
-            return Accepted(simulationUniqueName);
+            return Accepted(simulations);
         }
 
         [HttpDelete("{simulationName}")]

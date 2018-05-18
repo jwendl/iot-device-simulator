@@ -100,6 +100,30 @@ namespace DeviceSimulator
             DeviceSimulatorActorEventSource.Current.DeviceCreated(this, deviceSettings);
         }
 
+        public async Task CleanDevicesAsync(DeviceServiceSettings deviceServiceSettings, CancellationToken cancellationToken)
+        {
+            var registryManager = BuildRegistryManager(deviceServiceSettings);
+            var deviceQuery = registryManager.CreateQuery("select * from devices", 1000);
+            do
+            {
+                var deviceTwins = await deviceQuery.GetNextAsTwinAsync();
+                var devices = new List<Device>();
+                foreach (var deviceTwin in deviceTwins)
+                {
+                    devices.Add(new Device(deviceTwin.DeviceId));
+                }
+
+                var bulkRegistryOperationResult = await registryManager.RemoveDevices2Async(devices);
+                if (!bulkRegistryOperationResult.IsSuccessful)
+                {
+                    foreach (var error in bulkRegistryOperationResult.Errors)
+                    {
+                        DeviceSimulatorActorEventSource.Current.ExceptionOccured($"Error deleting device {error.DeviceId} because {error.ErrorCode} : {error.ErrorStatus}");
+                    }
+                }
+            } while (deviceQuery.HasMoreResults);
+        }
+
         private async Task ScheduleTurnSimulationReminderAsync(int periodSeconds)
         {
             // TODO: do we need this?
@@ -161,12 +185,12 @@ namespace DeviceSimulator
 
             string deviceType = deviceSettings.DeviceServiceSettings.DeviceType;
 
-            if (!this.scriptServiceCache.TryGetScriptService(deviceType, out _))
+            if (!scriptServiceCache.TryGetScriptService(deviceType, out _))
             {
                 var scriptService = this.cSharpServiceFactory();
                 scriptService.Compile(deviceSettings.Script);
 
-                this.scriptServiceCache.RegisterDeviceTypeScript(deviceType, scriptService);
+                scriptServiceCache.RegisterDeviceTypeScript(deviceType, scriptService);
             }
 
             var retryContext = new Context()

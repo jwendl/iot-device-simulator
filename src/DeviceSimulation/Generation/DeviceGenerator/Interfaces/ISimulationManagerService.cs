@@ -8,6 +8,8 @@ namespace DeviceGenerator.Interfaces
     {
         Task RunSimulationAsync(string simulationId, string simulationName, IEnumerable<SimulationItem> simulations, SimulationIoTHubOptions options);
 
+        Task DeleteAllDevicesAsync(SimulationIoTHubOptions simulationIoTHubOptions);
+
         Task StopSimulation(string simulationName);
     }
 }

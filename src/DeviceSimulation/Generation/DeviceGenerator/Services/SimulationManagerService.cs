@@ -103,6 +103,18 @@ namespace DeviceGenerator.Services
             await runSimulationBlock.Completion;
         }
 
+        public async Task DeleteAllDevicesAsync(SimulationIoTHubOptions simulationIoTHubOptions)
+        {
+            var deleteDevicesActor = ActorProxy.Create<IDeviceSimulator>(new ActorId(Guid.NewGuid().ToString()), deviceActorApplicationUri);
+            var deviceServiceSettings = new DeviceServiceSettings()
+            {
+                IoTHubConnectionString = simulationIoTHubOptions.IotHubConnectionString,
+                IoTHubName = simulationIoTHubOptions.IoTHubName,
+            };
+
+            await deleteDevicesActor.CleanDevicesAsync(deviceServiceSettings, CancellationToken.None);
+        }
+
         public async Task StopSimulation(string simulationName)
         {
             var fabricClient = new FabricClient();
