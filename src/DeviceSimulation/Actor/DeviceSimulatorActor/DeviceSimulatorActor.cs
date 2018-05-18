@@ -103,17 +103,21 @@ namespace DeviceSimulator
         public async Task CleanDevicesAsync(DeviceServiceSettings deviceServiceSettings, CancellationToken cancellationToken)
         {
             var registryManager = BuildRegistryManager(deviceServiceSettings);
-            var deviceQuery = registryManager.CreateQuery("select * from devices", 1000);
+            var deviceQuery = registryManager.CreateQuery("select * from devices", 100);
             do
             {
                 var deviceTwins = await deviceQuery.GetNextAsTwinAsync();
                 var devices = new List<Device>();
                 foreach (var deviceTwin in deviceTwins)
                 {
-                    devices.Add(new Device(deviceTwin.DeviceId));
+                    devices.Add(new Device(deviceTwin.DeviceId)
+                    {
+                        ETag = deviceTwin.ETag,
+                    });
                 }
 
-                var bulkRegistryOperationResult = await registryManager.RemoveDevices2Async(devices);
+                //var bulkRegistryOperationResult = await registryManager.RemoveDevices2Async(devices);
+                var bulkRegistryOperationResult = await registryManager.RemoveDevices2Async(devices, true, cancellationToken);
                 if (!bulkRegistryOperationResult.IsSuccessful)
                 {
                     foreach (var error in bulkRegistryOperationResult.Errors)

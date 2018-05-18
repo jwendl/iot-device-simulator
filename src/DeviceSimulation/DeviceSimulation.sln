@@ -25,8 +25,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "state", "state", "{BE8E9980
 		SampleFiles\state\Fridge.json = SampleFiles\state\Fridge.json
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Monitoring", "Monitoring", "{A2194AC9-8DDE-4DC1-BE07-00B2DB2750DC}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{E169114A-0904-4FA4-B7D2-95ADD5EAD996}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Actor", "Actor", "{CCA54294-EBD6-46D2-A5C0-C5B689BA69E8}"
@@ -45,11 +43,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DeviceGenerator", "Generati
 EndProject
 Project("{A07B5EB6-E848-4116-A8D0-A826331D98C6}") = "DeviceScenarioLoader.App", "Generation\DeviceScenarioLoader.App\DeviceScenarioLoader.App.sfproj", "{567BAEA4-1F28-4A83-B7C8-99B93399438C}"
 EndProject
-Project("{A07B5EB6-E848-4116-A8D0-A826331D98C6}") = "MonitoringService.App", "Monitoring\MonitoringService.App\MonitoringService.App.sfproj", "{80A363B6-26B7-49CC-A5E8-39C3D6171E7A}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DeviceSimulatorActor.Tests", "Tests\DeviceSimulatorActor.Tests\DeviceSimulatorActor.Tests.csproj", "{F04B8328-6536-4D66-B354-61DF16369606}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonitoringService", "Monitoring\MonitoringService\MonitoringService.csproj", "{D4C4C7C4-56E4-472B-9CB5-798B447B8183}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -101,15 +95,6 @@ Global
 		{567BAEA4-1F28-4A83-B7C8-99B93399438C}.Release|Any CPU.ActiveCfg = Release|x64
 		{567BAEA4-1F28-4A83-B7C8-99B93399438C}.Release|x64.ActiveCfg = Release|x64
 		{567BAEA4-1F28-4A83-B7C8-99B93399438C}.Release|x64.Build.0 = Release|x64
-		{80A363B6-26B7-49CC-A5E8-39C3D6171E7A}.Debug|Any CPU.ActiveCfg = Debug|x64
-		{80A363B6-26B7-49CC-A5E8-39C3D6171E7A}.Debug|Any CPU.Build.0 = Debug|x64
-		{80A363B6-26B7-49CC-A5E8-39C3D6171E7A}.Debug|Any CPU.Deploy.0 = Debug|x64
-		{80A363B6-26B7-49CC-A5E8-39C3D6171E7A}.Debug|x64.ActiveCfg = Debug|x64
-		{80A363B6-26B7-49CC-A5E8-39C3D6171E7A}.Debug|x64.Build.0 = Debug|x64
-		{80A363B6-26B7-49CC-A5E8-39C3D6171E7A}.Debug|x64.Deploy.0 = Debug|x64
-		{80A363B6-26B7-49CC-A5E8-39C3D6171E7A}.Release|Any CPU.ActiveCfg = Release|x64
-		{80A363B6-26B7-49CC-A5E8-39C3D6171E7A}.Release|x64.ActiveCfg = Release|x64
-		{80A363B6-26B7-49CC-A5E8-39C3D6171E7A}.Release|x64.Build.0 = Release|x64
 		{F04B8328-6536-4D66-B354-61DF16369606}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{F04B8328-6536-4D66-B354-61DF16369606}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F04B8328-6536-4D66-B354-61DF16369606}.Debug|x64.ActiveCfg = Debug|x64
@@ -118,12 +103,6 @@ Global
 		{F04B8328-6536-4D66-B354-61DF16369606}.Release|Any CPU.Build.0 = Release|Any CPU
 		{F04B8328-6536-4D66-B354-61DF16369606}.Release|x64.ActiveCfg = Release|x64
 		{F04B8328-6536-4D66-B354-61DF16369606}.Release|x64.Build.0 = Release|x64
-		{D4C4C7C4-56E4-472B-9CB5-798B447B8183}.Debug|Any CPU.ActiveCfg = Debug|x64
-		{D4C4C7C4-56E4-472B-9CB5-798B447B8183}.Debug|x64.ActiveCfg = Debug|x64
-		{D4C4C7C4-56E4-472B-9CB5-798B447B8183}.Debug|x64.Build.0 = Debug|x64
-		{D4C4C7C4-56E4-472B-9CB5-798B447B8183}.Release|Any CPU.ActiveCfg = Release|x64
-		{D4C4C7C4-56E4-472B-9CB5-798B447B8183}.Release|x64.ActiveCfg = Release|x64
-		{D4C4C7C4-56E4-472B-9CB5-798B447B8183}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -138,12 +117,10 @@ Global
 		{19BC446D-7A9A-4B11-93D0-097BA1BFBA5C} = {B4E01E82-69D2-43C1-8529-2E2628478623}
 		{2A214341-21AF-499B-9B42-0B849BC7508C} = {22EDC49D-936A-4812-8965-C2DBD0EEC4CB}
 		{567BAEA4-1F28-4A83-B7C8-99B93399438C} = {22EDC49D-936A-4812-8965-C2DBD0EEC4CB}
-		{80A363B6-26B7-49CC-A5E8-39C3D6171E7A} = {A2194AC9-8DDE-4DC1-BE07-00B2DB2750DC}
 		{F04B8328-6536-4D66-B354-61DF16369606} = {E169114A-0904-4FA4-B7D2-95ADD5EAD996}
-		{D4C4C7C4-56E4-472B-9CB5-798B447B8183} = {A2194AC9-8DDE-4DC1-BE07-00B2DB2750DC}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		EnterpriseLibraryConfigurationToolBinariesPathV6 = packages\EnterpriseLibrary.TransientFaultHandling.6.0.1304.0\lib\portable-net45+win+wp8
 		SolutionGuid = {948E18A9-E088-41C4-B526-61ABAFF644FB}
+		EnterpriseLibraryConfigurationToolBinariesPathV6 = packages\EnterpriseLibrary.TransientFaultHandling.6.0.1304.0\lib\portable-net45+win+wp8
 	EndGlobalSection
 EndGlobal

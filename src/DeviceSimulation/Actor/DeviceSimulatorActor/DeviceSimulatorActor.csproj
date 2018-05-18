@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -17,18 +17,16 @@
     <PackageReference Include="CodeEngine.FSharp" Version="1.0.5" />
     <PackageReference Include="CodeEngine.JavaScript" Version="1.0.5" />
     <PackageReference Include="CodeEngine.Python" Version="1.0.5" />
-    <PackageReference Include="Microsoft.Azure.Devices" Version="1.5.1" />
-    <PackageReference Include="Microsoft.Azure.Devices.Client" Version="1.6.2" />
+    <PackageReference Include="Microsoft.Azure.Devices" Version="1.6.0" />
+    <PackageReference Include="Microsoft.Azure.Devices.Client" Version="1.7.1" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.0.0" />
-    <PackageReference Include="Microsoft.ServiceFabric" Version="6.1.480" />
-    <PackageReference Include="Microsoft.ServiceFabric.Actors" Version="3.0.480" />
-    <PackageReference Include="Microsoft.ServiceFabric.Data" Version="3.0.480" />
-    <PackageReference Include="Microsoft.ServiceFabric.Services" Version="3.0.480" />
+    <PackageReference Include="Microsoft.ServiceFabric" Version="6.2.274" />
+    <PackageReference Include="Microsoft.ServiceFabric.Actors" Version="3.1.274" />
+    <PackageReference Include="Microsoft.ServiceFabric.Data" Version="3.1.274" />
+    <PackageReference Include="Microsoft.ServiceFabric.Services" Version="3.1.274" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="2.0.0" />
-
-    <PackageReference Include="Newtonsoft.Json" Version="11.0.1" />
-
-    <PackageReference Include="Polly" Version="5.9.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+    <PackageReference Include="Polly" Version="6.0.1" />
   </ItemGroup>
 
   <ItemGroup>
