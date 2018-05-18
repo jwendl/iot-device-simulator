@@ -70,9 +70,29 @@
       "type": "string",
       "allowedValues": [
         "Standard_D1_v2",
+        "Standard_D4s_v3",
         "Standard_D8s_v3",
         "Standard_E8s_v3"
       ]
+    },
+    "omsWorkspaceName": {
+      "type": "string",
+      "defaultValue": "sfomsworkspace",
+      "metadata": {
+        "description": "Name of your OMS Log Analytics Workspace"
+      }
+    },
+    "omsRegion": {
+      "type": "string",
+      "defaultValue": "East US",
+      "allowedValues": [
+        "West Europe",
+        "East US",
+        "Southeast Asia"
+      ],
+      "metadata": {
+        "description": "Specify the Azure Region for your OMS workspace"
+      }
     }
   },
   "variables": {
@@ -92,6 +112,8 @@
     "availSetName": "AvailabilitySet",
     "maxPercentUpgradeDomainDeltaUnhealthyNodes": "100",
     "vnetID": "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]",
+    "applicationDiagnosticsStorageAccountType": "Standard_LRS",
+    "applicationDiagnosticsStorageAccountName": "[toLower(concat('oms', uniqueString(resourceGroup().id), '3' ))]",
     "overProvision": "false",
     "nt0applicationStartPort": "20000",
     "nt0applicationEndPort": "30000",
@@ -110,11 +132,13 @@
     "lbHttpProbeID0": "[concat(variables('lbID0'),'/probes/FabricHttpGatewayProbe')]",
     "lbNatPoolID0": "[concat(variables('lbID0'),'/inboundNatPools/LoadBalancerBEAddressNatPool')]",
     "vmNodeType0Name": "[toLower(concat('NT1', variables('vmName')))]",
-    "vmNodeType0Size": "Standard_D2s_v3",
+    "vmNodeType0Size": "[parameters('clusterNodeSize')]",
     "vmPublisher": "MicrosoftWindowsServer",
     "vmOffer": "WindowsServer",
     "vmSku": "2016-Datacenter-with-Containers",
-    "autoScaleSettingsName": "[concat(variables('vmNodeType0Name'), 'AutoScaleSettings')]"
+    "autoScaleSettingsName": "[concat(variables('vmNodeType0Name'), 'AutoScaleSettings')]",
+    "solution": "[Concat('ServiceFabric', '(', parameters('omsWorkspacename'), ')')]",
+    "solutionName": "ServiceFabric"
   },
   "resources": [
     {
@@ -130,6 +154,22 @@
       },
       "tags": {
         "displayName": "Storage Account"
+      }
+    },
+    {
+      "apiVersion": "2017-06-01",
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "[variables('applicationDiagnosticsStorageAccountName')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [],
+      "properties": {},
+      "kind": "Storage",
+      "sku": {
+        "name": "Standard_LRS"
+      },
+      "tags": {
+        "resourceType": "Service Fabric",
+        "clusterName": "[parameters('clusterName')]"
       }
     },
     {
@@ -357,6 +397,58 @@
                   },
                   "typeHandlerVersion": "1.0"
                 }
+              },
+              {
+                "name": "[concat('VMDiagnosticsVmExt','_vmNodeType0Name')]",
+                "properties": {
+                  "type": "IaaSDiagnostics",
+                  "autoUpgradeMinorVersion": true,
+                  "protectedSettings": {
+                    "storageAccountName": "[variables('applicationDiagnosticsStorageAccountName')]",
+                    "storageAccountKey": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('applicationDiagnosticsStorageAccountName')),'2015-05-01-preview').key1]",
+                    "storageAccountEndPoint": "https://core.windows.net/"
+                  },
+                  "publisher": "Microsoft.Azure.Diagnostics",
+                  "settings": {
+                    "WadCfg": {
+                      "DiagnosticMonitorConfiguration": {
+                        "overallQuotaInMB": "50000",
+                        "EtwProviders": {
+                          "EtwEventSourceProviderConfiguration": [
+                            {
+                              "provider": "Microsoft-ServiceFabric-Actors",
+                              "scheduledTransferKeywordFilter": "1",
+                              "scheduledTransferPeriod": "PT5M",
+                              "DefaultEvents": {
+                                "eventDestination": "ServiceFabricReliableActorEventTable"
+                              }
+                            },
+                            {
+                              "provider": "Microsoft-ServiceFabric-Services",
+                              "scheduledTransferPeriod": "PT5M",
+                              "DefaultEvents": {
+                                "eventDestination": "ServiceFabricReliableServiceEventTable"
+                              }
+                            }
+                          ],
+                          "EtwManifestProviderConfiguration": [
+                            {
+                              "provider": "cbd93bc2-71e5-4566-b3a7-595d8eeca6e8",
+                              "scheduledTransferLogLevelFilter": "Information",
+                              "scheduledTransferKeywordFilter": "4611686018427387904",
+                              "scheduledTransferPeriod": "PT5M",
+                              "DefaultEvents": {
+                                "eventDestination": "ServiceFabricSystemEventTable"
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    "StorageAccount": "[variables('applicationDiagnosticsStorageAccountName')]"
+                  },
+                  "typeHandlerVersion": "1.5"
+                }
               }
             ]
           },
@@ -476,6 +568,59 @@
         "displayName": "Service Fabric Cluster",
         "resourceType": "Service Fabric",
         "clusterName": "[parameters('clusterName')]"
+      }
+    },
+    {
+      "apiVersion": "2015-11-01-preview",
+      "location": "[parameters('omsRegion')]",
+      "name": "[parameters('omsWorkspaceName')]",
+      "type": "Microsoft.OperationalInsights/workspaces",
+      "properties": {
+        "sku": {
+          "name": "Free"
+        }
+      },
+      "resources": [
+        {
+          "apiVersion": "2015-11-01-preview",
+          "name": "[concat(variables('applicationDiagnosticsStorageAccountName'), parameters('omsWorkspaceName'))]",
+          "type": "storageinsightconfigs",
+          "dependsOn": [
+            "[concat('Microsoft.OperationalInsights/workspaces/', parameters('omsWorkspacename'))]",
+            "[concat('Microsoft.Storage/storageAccounts/', variables('applicationDiagnosticsStorageAccountName'))]"
+          ],
+          "properties": {
+            "containers": [],
+            "tables": [
+              "WADServiceFabric*EventTable",
+              "WADWindowsEventLogsTable",
+              "WADETWEventTable"
+            ],
+            "storageAccount": {
+              "id": "[resourceId('Microsoft.Storage/storageaccounts/', variables('applicationDiagnosticsStorageAccountName'))]",
+              "key": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('applicationDiagnosticsStorageAccountName')),'2015-06-15').key1]"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "apiVersion": "2015-11-01-preview",
+      "location": "[parameters('omsRegion')]",
+      "name": "[variables('solution')]",
+      "type": "Microsoft.OperationsManagement/solutions",
+      "id": "[resourceId('Microsoft.OperationsManagement/solutions/', variables('solution'))]",
+      "dependsOn": [
+        "[concat('Microsoft.OperationalInsights/workspaces/', parameters('OMSWorkspacename'))]"
+      ],
+      "properties": {
+        "workspaceResourceId": "[resourceId('Microsoft.OperationalInsights/workspaces/', parameters('omsWorkspacename'))]"
+      },
+      "plan": {
+        "name": "[variables('solution')]",
+        "publisher": "Microsoft",
+        "product": "[Concat('OMSGallery/', variables('solutionName'))]",
+        "promotionCode": ""
       }
     }
   ],

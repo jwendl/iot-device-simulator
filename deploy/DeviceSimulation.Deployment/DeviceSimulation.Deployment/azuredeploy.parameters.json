@@ -21,7 +21,10 @@
       "value": "Platinum"
     },
     "clusterNodeSize": {
-      "value": "Standard_D1_v2"
+      "value": "Standard_D4s_v3"
+    },
+    "omsWorkspaceName": {
+      "value": "jwiotomsworkspace"
     }
   }
 }
