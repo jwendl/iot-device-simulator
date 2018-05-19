@@ -413,6 +413,7 @@
                     "WadCfg": {
                       "DiagnosticMonitorConfiguration": {
                         "overallQuotaInMB": "50000",
+                        "sinks": "applicationInsights",
                         "EtwProviders": {
                           "EtwEventSourceProviderConfiguration": [
                             {
@@ -440,6 +441,47 @@
                               "DefaultEvents": {
                                 "eventDestination": "ServiceFabricSystemEventTable"
                               }
+                            }
+                          ]
+                        },
+                        "PerformanceCounters": {
+                          "scheduledTransferPeriod": "PT1M",
+                          "PerformanceCounterConfiguration": [
+                            {
+                              "counterSpecifier": "\\Processor(_Total)\\% Processor Time",
+                              "sampleRate": "PT1M",
+                              "unit": "Percent",
+                              "annotation": [
+                              ],
+                              "sinks": ""
+                            },
+                            {
+                              "counterSpecifier": "\\Memory\\Available Bytes",
+                              "sampleRate": "PT1M",
+                              "unit": "Bytes",
+                              "annotation": [
+                              ],
+                              "sinks": ""
+                            },
+                            {
+                              "counterSpecifier": "\\Memory\\PercentAvailableMemory",
+                              "sampleRate": "PT1M",
+                              "unit": "Percent",
+                              "annotation": [
+                              ],
+                              "sinks": ""
+                            },
+                            {
+                              "counterSpecifier": "\\Service Fabric Actor Method(*)\\Invocations/Sec",
+                              "sampleRate": "PT1M"
+                            }
+                          ]
+                        },
+                        "SinksConfig": {
+                          "Sink": [
+                            {
+                              "name": "applicationInsights",
+                              "ApplicationInsights": "642c7b14-039a-46ef-a467-131a561069d7"
                             }
                           ]
                         }
