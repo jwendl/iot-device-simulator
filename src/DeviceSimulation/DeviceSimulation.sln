@@ -6,6 +6,9 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{0C407237-BC4F-4D71-904A-49DAFA7AED42}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SampleFiles", "SampleFiles", "{ED4D2D63-0040-49D8-AEA0-F00126A2471C}"
+	ProjectSection(SolutionItems) = preProject
+		SampleFiles\upload-files.sh = SampleFiles\upload-files.sh
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "run", "run", "{DB51703B-148A-414B-A64F-F370352F9F06}"
 	ProjectSection(SolutionItems) = preProject
@@ -120,7 +123,7 @@ Global
 		{F04B8328-6536-4D66-B354-61DF16369606} = {E169114A-0904-4FA4-B7D2-95ADD5EAD996}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {948E18A9-E088-41C4-B526-61ABAFF644FB}
 		EnterpriseLibraryConfigurationToolBinariesPathV6 = packages\EnterpriseLibrary.TransientFaultHandling.6.0.1304.0\lib\portable-net45+win+wp8
+		SolutionGuid = {948E18A9-E088-41C4-B526-61ABAFF644FB}
 	EndGlobalSection
 EndGlobal

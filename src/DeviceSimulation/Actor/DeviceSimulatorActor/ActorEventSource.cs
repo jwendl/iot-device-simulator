@@ -174,6 +174,88 @@ namespace DeviceSimulator
         }
 
         [NonEvent]
+        public void DeviceFailedAdd(Actor actor, DeviceSettings deviceInfo, int retryCount)
+        {
+            DeviceFailedAdd(actor.ActorService.Context.ServiceName.ToString(),
+                actor.ActorService.Context.ServiceTypeName,
+                actor.ActorService.Context.ReplicaId,
+                actor.ActorService.Context.PartitionId,
+                actor.ActorService.Context.CodePackageActivationContext.ApplicationName,
+                actor.ActorService.Context.CodePackageActivationContext.ApplicationTypeName,
+                actor.ActorService.Context.NodeContext.NodeName,
+                deviceInfo.SimulationSettings.SimulationId,
+                deviceInfo.SimulationSettings.SimulationName,
+                deviceInfo.DeviceServiceSettings.DeviceName,
+                deviceInfo.DeviceServiceSettings.DeviceType,
+                retryCount);
+        }
+
+        private const int DeviceFailedAddEventId = 104;
+        [Event(DeviceFailedAddEventId, Level = EventLevel.Informational, Message = "Device connected with id: {7}")]
+        private void DeviceFailedAdd(string serviceName, string serviceTypeName, long replicaId, Guid partitionId,
+            string applicationName, string applicationTypeName, string nodeName, string simulationId,
+            string simulationName, string deviceName, string deviceType, int retryCount)
+        {
+            if (this.IsEnabled())
+            {
+                WriteEvent(DeviceFailedAddEventId,
+                    serviceName,
+                    serviceTypeName,
+                    replicaId,
+                    partitionId,
+                    applicationName,
+                    applicationTypeName,
+                    nodeName,
+                    simulationId,
+                    simulationName,
+                    deviceName,
+                    deviceType,
+                    retryCount);
+            }
+        }
+
+        [NonEvent]
+        public void DeviceFailedTwin(Actor actor, DeviceSettings deviceInfo, int retryCount)
+        {
+            DeviceFailedTwin(actor.ActorService.Context.ServiceName.ToString(),
+                actor.ActorService.Context.ServiceTypeName,
+                actor.ActorService.Context.ReplicaId,
+                actor.ActorService.Context.PartitionId,
+                actor.ActorService.Context.CodePackageActivationContext.ApplicationName,
+                actor.ActorService.Context.CodePackageActivationContext.ApplicationTypeName,
+                actor.ActorService.Context.NodeContext.NodeName,
+                deviceInfo.SimulationSettings.SimulationId,
+                deviceInfo.SimulationSettings.SimulationName,
+                deviceInfo.DeviceServiceSettings.DeviceName,
+                deviceInfo.DeviceServiceSettings.DeviceType,
+                retryCount);
+        }
+
+        private const int DeviceFailedTwinEventId = 105;
+        [Event(DeviceFailedTwinEventId, Level = EventLevel.Informational, Message = "Device connected with id: {7}")]
+        private void DeviceFailedTwin(string serviceName, string serviceTypeName, long replicaId, Guid partitionId,
+            string applicationName, string applicationTypeName, string nodeName, string simulationId,
+            string simulationName, string deviceName, string deviceType, int retryCount)
+        {
+            if (this.IsEnabled())
+            {
+                WriteEvent(DeviceFailedTwinEventId,
+                    serviceName,
+                    serviceTypeName,
+                    replicaId,
+                    partitionId,
+                    applicationName,
+                    applicationTypeName,
+                    nodeName,
+                    simulationId,
+                    simulationName,
+                    deviceName,
+                    deviceType,
+                    retryCount);
+            }
+        }
+
+        [NonEvent]
         public void DeviceFailedConnection(Actor actor, DeviceSettings deviceInfo, int retryCount)
         {
             DeviceFailedConnection(actor.ActorService.Context.ServiceName.ToString(),
@@ -190,7 +272,7 @@ namespace DeviceSimulator
                 retryCount);
         }
 
-        private const int DeviceFailedConnectionEventId = 104;
+        private const int DeviceFailedConnectionEventId = 106;
         [Event(DeviceFailedConnectionEventId, Level = EventLevel.Informational, Message = "Device connected with id: {7}")]
         private void DeviceFailedConnection(string serviceName, string serviceTypeName, long replicaId, Guid partitionId,
             string applicationName, string applicationTypeName, string nodeName, string simulationId,

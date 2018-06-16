@@ -69,7 +69,6 @@
     "clusterNodeSize": {
       "type": "string",
       "allowedValues": [
-        "Standard_D1_v2",
         "Standard_D4s_v3",
         "Standard_D8s_v3",
         "Standard_E8s_v3"
@@ -93,11 +92,40 @@
       "metadata": {
         "description": "Specify the Azure Region for your OMS workspace"
       }
+    },
+    "iotHubName": {
+      "type": "string",
+      "minLength": 3,
+      "metadata": {
+        "description": "Name of the IoT Hub instance to provision."
+      }
+    },
+    "iotHubSkuName": {
+      "type": "string",
+      "allowedValues": [
+        "F1",
+        "S1",
+        "S2",
+        "S3"
+      ],
+      "defaultValue": "F1",
+      "metadata": {
+        "description": "One of the supported SKUs: F1, S1 or S2"
+      }
+    },
+    "iotHubCapacityUnits": {
+      "type": "int",
+      "minValue": 1,
+      "defaultValue": 1,
+      "metadata": {
+        "description": "Number of desired IoT Hub units. Restricted to 1 unit for F1. Can be set up to maximum number allowed for subscription."
+      }
     }
   },
   "variables": {
     "clusterLocation": "[resourceGroup().location]",
     "computeLocation": "[resourceGroup().location]",
+    "iotHubLocation": "[resourceGroup().location]",
     "appInsightsLocation": "eastus",
     "dnsName": "[parameters('clusterName')]",
     "vmName": "vm",
@@ -130,6 +158,7 @@
     "lbPoolID0": "[concat(variables('lbID0'),'/backendAddressPools/LoadBalancerBEAddressPool')]",
     "lbProbeID0": "[concat(variables('lbID0'),'/probes/FabricGatewayProbe')]",
     "lbHttpProbeID0": "[concat(variables('lbID0'),'/probes/FabricHttpGatewayProbe')]",
+    "lbWebProbeID0": "[concat(variables('lbID0'),'/probes/FabricManagerProbe')]",
     "lbNatPoolID0": "[concat(variables('lbID0'),'/inboundNatPools/LoadBalancerBEAddressNatPool')]",
     "vmNodeType0Name": "[toLower(concat('NT1', variables('vmName')))]",
     "vmNodeType0Size": "[parameters('clusterNodeSize')]",
@@ -137,6 +166,15 @@
     "vmOffer": "WindowsServer",
     "vmSku": "2016-Datacenter-with-Containers",
     "autoScaleSettingsName": "[concat(variables('vmNodeType0Name'), 'AutoScaleSettings')]",
+    "d2cMessageRetentionInDaysPeriod": "1",
+    "d2cPartitionCount": "2",
+    "c2dMessagesTTLAsIso8601": "PT1H",
+    "c2dMessagesMaxDeliveryCount": "10",
+    "c2dFeebackMessagesTTLAsIso8601": "PT1H",
+    "c2dFeedbackMessagesMaxDeliveryCount": "10",
+    "c2dFeedbackMessagesLockDurationAsIso8601": "PT60S",
+    "d2cConsumerGroupName": "cg1",
+
     "solution": "[Concat('ServiceFabric', '(', parameters('omsWorkspacename'), ')')]",
     "solutionName": "ServiceFabric"
   },
@@ -308,7 +346,7 @@
               "frontendPort": "[variables('nt0fabricWebAppPort')]",
               "idleTimeoutInMinutes": 5,
               "probe": {
-                "id": "[variables('lbHttpProbeID0')]"
+                "id": "[variables('lbWebProbeID0')]"
               },
               "protocol": "Tcp"
             }
@@ -543,16 +581,7 @@
                 "storageAccountType": "Premium_LRS"
               }
             },
-            "dataDisks": [
-              {
-                "lun": 1,
-                "createOption": "Empty",
-                "diskSizeGB": 512,
-                "managedDisk": {
-                  "storageAccountType": "Premium_LRS"
-                }
-              }
-            ]
+            "dataDisks": []
           }
         }
       },
@@ -664,6 +693,96 @@
         "product": "[Concat('OMSGallery/', variables('solutionName'))]",
         "promotionCode": ""
       }
+    },
+    {
+      "apiVersion": "2016-02-03",
+      "location": "[variables('iotHubLocation')]",
+      "name": "[parameters('iotHubName')]",
+      "properties": {
+        "eventHubEndpoints": {
+          "events": {
+            "retentionTimeInDays": 1,
+            "partitionCount": "[variables('d2cPartitionCount')]",
+            "partitionIds": [
+              "0",
+              "1"
+            ]
+          },
+          "operationsMonitoringEvents": {
+            "retentionTimeInDays": 1,
+            "partitionCount": "[variables('d2cPartitionCount')]",
+            "partitionIds": [
+              "0",
+              "1"
+            ]
+          }
+        },
+        "routing": {
+          "endpoints": {
+            "serviceBusQueues": [],
+            "serviceBusTopics": [],
+            "eventHubs": []
+          },
+          "routes": [],
+          "fallbackRoute": {
+            "name": "$fallback",
+            "source": "DeviceMessages",
+            "condition": "true",
+            "endpointNames": [
+              "events"
+            ],
+            "isEnabled": true
+          }
+        },
+        "storageEndpoints": {
+          "$default": {
+            "sasTtlAsIso8601": "PT1H",
+            "connectionString": "",
+            "containerName": ""
+          }
+        },
+        "cloudToDevice": {
+          "defaultTtlAsIso8601": "[variables('c2dMessagesTTLAsIso8601')]",
+          "maxDeliveryCount": "[variables('c2dMessagesMaxDeliveryCount')]",
+          "feedback": {
+            "maxDeliveryCount": "[variables('c2dFeedbackMessagesMaxDeliveryCount')]",
+            "ttlAsIso8601": "[variables('c2dFeebackMessagesTTLAsIso8601')]",
+            "lockDurationAsIso8601": "[variables('c2dFeedbackMessagesLockDurationAsIso8601')]"
+          },
+          "operationsMonitoringProperties": {
+            "events": {
+              "None": "None",
+              "Connections": "None",
+              "DeviceTelemetry": "None",
+              "C2DCommands": "None",
+              "DeviceIdentityOperations": "None",
+              "FileUploadOperations": "None"
+            }
+          }
+        },
+        "location": "[resourceGroup().location]"
+      },
+      "sku": {
+        "name": "[parameters('iotHubSkuName')]",
+        "capacity": "[parameters('iotHubCapacityUnits')]"
+      },
+      "type": "Microsoft.Devices/iotHubs"
+    },
+    {
+      "apiVersion": "2016-02-03",
+      "type": "Microsoft.Devices/IotHubs/eventhubEndpoints/ConsumerGroups",
+      "name": "[concat(parameters('iotHubName'), '/events/cg2')]",
+      "dependsOn": [
+        "[concat('Microsoft.Devices/Iothubs/', parameters('iotHubName'))]"
+      ]
+    },
+    {
+      "apiVersion": "2016-02-03",
+      "dependsOn": [
+        "[concat('Microsoft.Devices/iothubs/', parameters('iotHubName'))]"
+      ],
+      "name": "[concat(parameters('iotHubName'), '/events/', variables('d2cConsumerGroupName'))]",
+      "type": "Microsoft.Devices/iotHubs/eventhubEndpoints/ConsumerGroups"
     }
   ],
   "outputs": {
@@ -674,6 +793,10 @@
     "ipaddress": {
       "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses', concat(variables('lbIPName'),'-','0')), '2016-10-01').dnsSettings.fqdn]",
       "type": "string"
+    },
+    "iotHubKeys": {
+      "value": "[listKeys(resourceId('Microsoft.Devices/iotHubs', parameters('iotHubName')), '2016-02-03')]",
+      "type": "object"
     }
   }
 }

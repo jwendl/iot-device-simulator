@@ -5,8 +5,6 @@ using DeviceSimulator;
 using Microsoft.ServiceFabric.Actors;
 using Microsoft.ServiceFabric.Actors.Client;
 using Microsoft.ServiceFabric.Actors.Query;
-using Polly;
-using Polly.Retry;
 using System;
 using System.Collections.Generic;
 using System.Fabric;
@@ -20,15 +18,6 @@ namespace DeviceGenerator.Services
     internal sealed class SimulationManagerService
         : ISimulationManagerService
     {
-        private static readonly RetryPolicy DeviceActorCommunicationRetryPolicy = Policy
-                        .Handle<FabricTransientException>()
-                        .RetryAsync(5, (fabricTransientException, retryCount, context) =>
-                        {
-                            //var methodThatRaisedException = context["methodName"];
-                            // TODO: Add logging here...
-                            // Log(fabricTransientException, methodThatRaisedException);
-                        });
-
         private readonly Uri deviceActorApplicationUri = new Uri("fabric:/DeviceSimulationActor.App/DeviceSimulatorActorService");
 
         public async Task RunSimulationAsync(string simulationId, string simulationName, IEnumerable<SimulationItem> simulationItems, SimulationIoTHubOptions simulationIoTHubOptions)

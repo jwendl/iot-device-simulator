@@ -23,6 +23,20 @@ namespace DeviceSimulator
     internal class DeviceSimulatorActor
         : Actor, IDeviceSimulator, IRemindable
     {
+        private static readonly RetryPolicy DeviceServiceAddRetryPolicy = Policy
+            .Handle<Exception>()
+            .RetryAsync(5, (exception, retryCount, context) =>
+            {
+                DeviceSimulatorActorEventSource.Current.DeviceFailedAdd((DeviceSimulatorActor)context[nameof(DeviceSimulatorActor)], (DeviceSettings)context[nameof(DeviceSettings)], retryCount);
+            });
+
+        private static readonly RetryPolicy DeviceServiceTwinRetryPolicy = Policy
+            .Handle<Exception>()
+            .RetryAsync(5, (exception, retryCount, context) =>
+            {
+                DeviceSimulatorActorEventSource.Current.DeviceFailedTwin((DeviceSimulatorActor)context[nameof(DeviceSimulatorActor)], (DeviceSettings)context[nameof(DeviceSettings)], retryCount);
+            });
+
         private static readonly RetryPolicy DeviceServiceConnectRetryPolicy = Policy
             .Handle<Exception>()
             .RetryAsync(5, (exception, retryCount, context) =>
@@ -65,11 +79,22 @@ namespace DeviceSimulator
         public async Task AddDeviceAsync(DeviceServiceSettings deviceServiceSettings, CancellationToken cancellationToken)
         {
             var registryManager = BuildRegistryManager(deviceServiceSettings);
-            var device = await registryManager.GetDeviceAsync(deviceServiceSettings.DeviceName);
-            if (device == null)
-            {
-                device = await registryManager.AddDeviceAsync(new Device(deviceServiceSettings.DeviceName));
-            }
+
+            var retryContext = new Context()
+                {
+                    { nameof(DeviceSimulatorActor), this }
+                };
+
+            await DeviceServiceConnectRetryPolicy.ExecuteAsync(
+                async context =>
+                {
+                    var device = await registryManager.GetDeviceAsync(deviceServiceSettings.DeviceName);
+                    if (device == null)
+                    {
+                        device = await registryManager.AddDeviceAsync(new Device(deviceServiceSettings.DeviceName));
+                    }
+                },
+                retryContext);
         }
 
         public async Task CreateDeviceTwinAsync(DeviceServiceSettings deviceServiceSettings, CancellationToken cancellationToken)
@@ -81,7 +106,17 @@ namespace DeviceSimulator
                 Tags = { ["IsSimulated"] = "Y" }
             };
 
-            await registryManager.UpdateTwinAsync(device.Id, twin, "*");
+            var retryContext = new Context()
+                {
+                    { nameof(DeviceSimulatorActor), this }
+                };
+
+            await DeviceServiceConnectRetryPolicy.ExecuteAsync(
+                async context =>
+                {
+                    await registryManager.UpdateTwinAsync(device.Id, twin, "*");
+                },
+                retryContext);
         }
 
         public async Task RunSimulationAsync(DeviceSettings deviceSettings, CancellationToken cancellationToken)
