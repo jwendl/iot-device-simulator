@@ -21,20 +21,20 @@ namespace DeviceSimulator
 {
     [StatePersistence(StatePersistence.Volatile)]
     internal class DeviceSimulatorActor
-        : Actor, IDeviceSimulator, IRemindable
+        : Actor, IDeviceSimulator
     {
         private static readonly RetryPolicy DeviceServiceAddRetryPolicy = Policy
             .Handle<Exception>()
             .RetryAsync(5, (exception, retryCount, context) =>
             {
-                DeviceSimulatorActorEventSource.Current.DeviceFailedAdd((DeviceSimulatorActor)context[nameof(DeviceSimulatorActor)], (DeviceSettings)context[nameof(DeviceSettings)], retryCount);
+                DeviceSimulatorActorEventSource.Current.DeviceFailedAdd((DeviceSimulatorActor)context[nameof(DeviceSimulatorActor)], (DeviceServiceSettings)context[nameof(DeviceServiceSettings)], retryCount);
             });
 
         private static readonly RetryPolicy DeviceServiceTwinRetryPolicy = Policy
             .Handle<Exception>()
             .RetryAsync(5, (exception, retryCount, context) =>
             {
-                DeviceSimulatorActorEventSource.Current.DeviceFailedTwin((DeviceSimulatorActor)context[nameof(DeviceSimulatorActor)], (DeviceSettings)context[nameof(DeviceSettings)], retryCount);
+                DeviceSimulatorActorEventSource.Current.DeviceFailedTwin((DeviceSimulatorActor)context[nameof(DeviceSimulatorActor)], (DeviceServiceSettings)context[nameof(DeviceServiceSettings)], retryCount);
             });
 
         private static readonly RetryPolicy DeviceServiceConnectRetryPolicy = Policy
@@ -58,9 +58,9 @@ namespace DeviceSimulator
 
         private readonly IDeviceTypeScriptServiceCache<ICSharpService<string>> scriptServiceCache;
         private readonly Func<ICSharpService<string>> cSharpServiceFactory;
-        private bool isRunning = false;
         private RegistryManager cachedRegistryManager;
         private DeviceClient cachedDeviceClient;
+        private IActorTimer turnTimer;
 
         public DeviceSimulatorActor(ActorService actorService, ActorId actorId, IDeviceTypeScriptServiceCache<ICSharpService<string>> scriptServiceCache, Func<ICSharpService<string>> cSharpServiceFactory)
             : base(actorService, actorId)
@@ -82,10 +82,11 @@ namespace DeviceSimulator
 
             var retryContext = new Context()
                 {
-                    { nameof(DeviceSimulatorActor), this }
+                    { nameof(DeviceSimulatorActor), this },
+                    { nameof(DeviceServiceSettings), deviceServiceSettings }
                 };
 
-            await DeviceServiceConnectRetryPolicy.ExecuteAsync(
+            await DeviceServiceAddRetryPolicy.ExecuteAsync(
                 async context =>
                 {
                     var device = await registryManager.GetDeviceAsync(deviceServiceSettings.DeviceName);
@@ -108,10 +109,11 @@ namespace DeviceSimulator
 
             var retryContext = new Context()
                 {
-                    { nameof(DeviceSimulatorActor), this }
+                    { nameof(DeviceSimulatorActor), this },
+                    { nameof(DeviceServiceSettings), deviceServiceSettings }
                 };
 
-            await DeviceServiceConnectRetryPolicy.ExecuteAsync(
+            await DeviceServiceTwinRetryPolicy.ExecuteAsync(
                 async context =>
                 {
                     await registryManager.UpdateTwinAsync(device.Id, twin, "*");
@@ -130,7 +132,8 @@ namespace DeviceSimulator
             await StateManager.AddStateAsync(nameof(DeviceSettings), deviceSettings, cancellationToken);
 
             await ConnectToDeviceAsync();
-            await ScheduleTurnSimulationReminderAsync(deviceSettings.DeviceServiceSettings.DeviceInterval);
+
+            turnTimer = RegisterTimer(async (state) => await SimulateTurnAsync(), null, TimeSpan.FromSeconds(0), TimeSpan.FromSeconds(deviceSettings.DeviceServiceSettings.DeviceInterval));
 
             DeviceSimulatorActorEventSource.Current.DeviceCreated(this, deviceSettings);
         }
@@ -161,17 +164,6 @@ namespace DeviceSimulator
                     }
                 }
             } while (deviceQuery.HasMoreResults);
-        }
-
-        private async Task ScheduleTurnSimulationReminderAsync(int periodSeconds)
-        {
-            // TODO: do we need this?
-            if (!isRunning)
-            {
-                await RegisterReminderAsync("SendMessage", null, TimeSpan.Zero, TimeSpan.FromSeconds(periodSeconds));
-            }
-
-            isRunning = true;
         }
 
         private RegistryManager BuildRegistryManager(DeviceServiceSettings deviceServiceSettings)
@@ -322,11 +314,6 @@ namespace DeviceSimulator
 
                 return newDeviceStateJson;
             }
-        }
-
-        public async Task ReceiveReminderAsync(string reminderName, byte[] state, TimeSpan dueTime, TimeSpan period)
-        {
-            await SimulateTurnAsync();
         }
     }
 }
