@@ -60,7 +60,6 @@ namespace DeviceSimulator
         private readonly Func<ICSharpService<string>> cSharpServiceFactory;
         private RegistryManager cachedRegistryManager;
         private DeviceClient cachedDeviceClient;
-        private IActorTimer turnTimer;
 
         public DeviceSimulatorActor(ActorService actorService, ActorId actorId, IDeviceTypeScriptServiceCache<ICSharpService<string>> scriptServiceCache, Func<ICSharpService<string>> cSharpServiceFactory)
             : base(actorService, actorId)
@@ -121,7 +120,7 @@ namespace DeviceSimulator
                 retryContext);
         }
 
-        public async Task RunSimulationAsync(DeviceSettings deviceSettings, CancellationToken cancellationToken)
+        public async Task ConnectToHubAsync(DeviceSettings deviceSettings, CancellationToken cancellationToken)
         {
             if (deviceSettings == null)
             {
@@ -131,11 +130,78 @@ namespace DeviceSimulator
             await StateManager.AddStateAsync("DeviceStateJson", deviceSettings.InitialStateJson, cancellationToken);
             await StateManager.AddStateAsync(nameof(DeviceSettings), deviceSettings, cancellationToken);
 
-            await ConnectToDeviceAsync();
+            var deviceClient = await BuildDeviceClientAsync(deviceSettings.DeviceServiceSettings);
+            string deviceType = deviceSettings.DeviceServiceSettings.DeviceType;
 
-            turnTimer = RegisterTimer(async (state) => await SimulateTurnAsync(), null, TimeSpan.FromSeconds(0), TimeSpan.FromSeconds(deviceSettings.DeviceServiceSettings.DeviceInterval));
+            if (!scriptServiceCache.TryGetScriptService(deviceType, out _))
+            {
+                var scriptService = cSharpServiceFactory();
+                scriptService.Compile(deviceSettings.Script);
+
+                scriptServiceCache.RegisterDeviceTypeScript(deviceType, scriptService);
+            }
+
+            var retryContext = new Context()
+                {
+                    { nameof(DeviceSimulatorActor), this },
+                    { nameof(DeviceSettings), deviceSettings }
+                };
+
+            await DeviceServiceConnectRetryPolicy.ExecuteAsync(
+                async context =>
+                {
+                    await deviceClient.OpenAsync();
+                    DeviceSimulatorActorEventSource.Current.DeviceConnected(this, deviceSettings);
+                },
+                retryContext);
 
             DeviceSimulatorActorEventSource.Current.DeviceCreated(this, deviceSettings);
+        }
+
+        public async Task SendEventAsync()
+        {
+            var deviceSettings = await StateManager.GetStateAsync<DeviceSettings>(nameof(DeviceSettings));
+            var deviceServiceSettings = deviceSettings.DeviceServiceSettings;
+
+            // Simulate the next state for the device and record that new state for the next turn
+            var nextStateJson = await BuildNextStateAsync();
+            var deviceClient = await BuildDeviceClientAsync(deviceServiceSettings);
+
+            try
+            {
+                DeviceSimulatorActorEventSource.Current.DeviceSendStart(this, deviceSettings);
+
+                var jsonBytes = Encoding.UTF8.GetBytes(nextStateJson);
+                var message = new Message(jsonBytes);
+
+                IDictionary<string, string> messageProperties = message.Properties;
+                messageProperties.Add("messageType", deviceSettings.MessageType);
+                messageProperties.Add("correlationId", Guid.NewGuid().ToString());
+                messageProperties.Add("parentCorrelationId", Guid.NewGuid().ToString());
+                messageProperties.Add("createdDateTime", DateTime.UtcNow.ToString("u", DateTimeFormatInfo.InvariantInfo));
+                messageProperties.Add("deviceId", deviceServiceSettings.DeviceName);
+
+                var properties = deviceSettings.Properties;
+                if (properties != null)
+                {
+                    foreach (var property in properties)
+                    {
+                        messageProperties.Add(property.Key, property.Value);
+                    }
+                }
+
+                await deviceClient.SendEventAsync(message);
+            }
+            catch (Exception ex)
+            {
+                //TODO How to handle throttling exceptions
+                DeviceSimulatorActorEventSource.Current.ExceptionOccured(ex.ToString());
+                throw;
+            }
+            finally
+            {
+                DeviceSimulatorActorEventSource.Current.DeviceSendStop(this, deviceSettings);
+            }
         }
 
         public async Task CleanDevicesAsync(DeviceServiceSettings deviceServiceSettings, CancellationToken cancellationToken)
@@ -154,7 +220,6 @@ namespace DeviceSimulator
                     });
                 }
 
-                //var bulkRegistryOperationResult = await registryManager.RemoveDevices2Async(devices);
                 var bulkRegistryOperationResult = await registryManager.RemoveDevices2Async(devices, true, cancellationToken);
                 if (!bulkRegistryOperationResult.IsSuccessful)
                 {
@@ -209,111 +274,37 @@ namespace DeviceSimulator
             }
         }
 
-        private async Task ConnectToDeviceAsync()
-        {
-            var deviceSettings = await StateManager.GetStateAsync<DeviceSettings>(nameof(DeviceSettings));
-            var deviceClient = await BuildDeviceClientAsync(deviceSettings.DeviceServiceSettings);
-
-            string deviceType = deviceSettings.DeviceServiceSettings.DeviceType;
-
-            if (!scriptServiceCache.TryGetScriptService(deviceType, out _))
-            {
-                var scriptService = this.cSharpServiceFactory();
-                scriptService.Compile(deviceSettings.Script);
-
-                scriptServiceCache.RegisterDeviceTypeScript(deviceType, scriptService);
-            }
-
-            var retryContext = new Context()
-                {
-                    { nameof(DeviceSimulatorActor), this },
-                    { nameof(DeviceSettings), deviceSettings }
-                };
-
-            await DeviceServiceConnectRetryPolicy.ExecuteAsync(
-                async context =>
-                {
-                    await deviceClient.OpenAsync();
-                    DeviceSimulatorActorEventSource.Current.DeviceConnected(this, deviceSettings);
-                },
-                retryContext);
-        }
-
-        private async Task SimulateTurnAsync()
+        private async Task<string> BuildNextStateAsync()
         {
             var deviceSettings = await StateManager.GetStateAsync<DeviceSettings>(nameof(DeviceSettings));
             var deviceServiceSettings = deviceSettings.DeviceServiceSettings;
 
-            // Simulate the next state for the device and record that new state for the next turn
-            var nextStateJson = await SimulateNextState();
-            var deviceClient = await BuildDeviceClientAsync(deviceServiceSettings);
-
-            try
+            var deviceStateJson = await StateManager.GetStateAsync<string>("DeviceStateJson");
+            if (!scriptServiceCache.TryGetScriptService(deviceServiceSettings.DeviceType, out var scriptService))
             {
-                DeviceSimulatorActorEventSource.Current.DeviceSendStart(this, deviceSettings);
-
-                var jsonBytes = Encoding.UTF8.GetBytes(nextStateJson);
-                var message = new Message(jsonBytes);
-
-                IDictionary<string, string> messageProperties = message.Properties;
-                messageProperties.Add("messageType", deviceSettings.MessageType);
-                messageProperties.Add("correlationId", Guid.NewGuid().ToString());
-                messageProperties.Add("parentCorrelationId", Guid.NewGuid().ToString());
-                messageProperties.Add("createdDateTime", DateTime.UtcNow.ToString("u", DateTimeFormatInfo.InvariantInfo));
-                messageProperties.Add("deviceId", deviceServiceSettings.DeviceName);
-
-                var properties = deviceSettings.Properties;
-                if (properties != null)
-                {
-                    foreach (var property in properties)
-                    {
-                        messageProperties.Add(property.Key, property.Value);
-                    }
-                }
-
-                await deviceClient.SendEventAsync(message);
-            }
-            catch (Exception ex)
-            {
-                //TODO How to handle throttling exceptions
-                DeviceSimulatorActorEventSource.Current.ExceptionOccured(ex.ToString());
-                throw;
-            }
-            finally
-            {
-                DeviceSimulatorActorEventSource.Current.DeviceSendStop(this, deviceSettings);
+                throw new Exception($"Script service not registered for device type: {deviceServiceSettings.DeviceType}");
             }
 
-            async Task<string> SimulateNextState()
+            var newDeviceStateJson = await scriptService.ExecuteAsync(deviceStateJson);
+            var newDeviceState = JObject.Parse(newDeviceStateJson);
+
+            var deviceState = JObject.Parse(deviceStateJson);
+            var previousState = deviceState.Property("previousState");
+
+            if (previousState == null)
             {
-                var deviceStateJson = await StateManager.GetStateAsync<string>("DeviceStateJson");
-
-                if (!scriptServiceCache.TryGetScriptService(deviceServiceSettings.DeviceType, out var scriptService))
-                {
-                    throw new Exception($"Script service not registered for device type: {deviceServiceSettings.DeviceType}");
-                }
-
-                var newDeviceStateJson = await scriptService.ExecuteAsync(deviceStateJson);
-                var newDeviceState = JObject.Parse(newDeviceStateJson);
-
-                var deviceState = JObject.Parse(deviceStateJson);
-                var previousState = deviceState.Property("previousState");
-
-                if (previousState == null)
-                {
-                    deviceState.Add("previousState", newDeviceState);
-                }
-                else
-                {
-                    previousState.Value = newDeviceState;
-                }
-
-                deviceStateJson = deviceState.ToString();
-
-                await StateManager.SetStateAsync("DeviceStateJson", deviceStateJson);
-
-                return newDeviceStateJson;
+                deviceState.Add("previousState", newDeviceState);
             }
+            else
+            {
+                previousState.Value = newDeviceState;
+            }
+
+            deviceStateJson = deviceState.ToString();
+
+            await StateManager.SetStateAsync("DeviceStateJson", deviceStateJson);
+
+            return newDeviceStateJson;
         }
     }
 }

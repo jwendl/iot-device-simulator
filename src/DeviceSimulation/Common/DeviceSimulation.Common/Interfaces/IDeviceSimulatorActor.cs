@@ -17,6 +17,8 @@ namespace DeviceSimulator
 
         Task CreateDeviceTwinAsync(DeviceServiceSettings deviceServiceSettings, CancellationToken cancellationToken);
 
-        Task RunSimulationAsync(DeviceSettings deviceSettings, CancellationToken cancellationToken);
+        Task ConnectToHubAsync(DeviceSettings deviceSettings, CancellationToken cancellationToken);
+
+        Task SendEventAsync();
     }
 }

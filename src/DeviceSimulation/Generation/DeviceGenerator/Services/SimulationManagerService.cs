@@ -35,14 +35,22 @@ namespace DeviceGenerator.Services
                 return deviceBlockInformation;
             });
 
-            var runSimulationBlock = new TransformBlock<DeviceBlockInformation, DeviceBlockInformation>(async (deviceBlockInformation) =>
+            var connectToHubBlock = new TransformBlock<DeviceBlockInformation, DeviceBlockInformation>(async (deviceBlockInformation) =>
             {
-                await deviceBlockInformation.DeviceSimulatorActor.RunSimulationAsync(deviceBlockInformation.DeviceSettings, CancellationToken.None);
+                await deviceBlockInformation.DeviceSimulatorActor.ConnectToHubAsync(deviceBlockInformation.DeviceSettings, CancellationToken.None);
                 return deviceBlockInformation;
             });
 
+            ActionBlock<DeviceBlockInformation> sendEventBlock = null;
+            sendEventBlock = new ActionBlock<DeviceBlockInformation>(async (deviceBlockInformation) =>
+            {
+                await deviceBlockInformation.DeviceSimulatorActor.SendEventAsync();
+                await Task.Delay(deviceBlockInformation.DeviceSettings.DeviceServiceSettings.DeviceInterval);
+            });
+
             addDeviceBlock.LinkTo(createTwinBlock, linkOptions);
-            createTwinBlock.LinkTo(runSimulationBlock, linkOptions);
+            createTwinBlock.LinkTo(connectToHubBlock, linkOptions);
+            connectToHubBlock.LinkTo(sendEventBlock, linkOptions);
 
             // Enumerate the simulations and begin to stand up device instances for each one
             foreach (var simulationItem in simulationItems)
@@ -89,7 +97,7 @@ namespace DeviceGenerator.Services
             addDeviceBlock.Complete();
 
             // Wait for all the devices to be running their simulations
-            await runSimulationBlock.Completion;
+            await sendEventBlock.Completion;
         }
 
         public async Task DeleteAllDevicesAsync(SimulationIoTHubOptions simulationIoTHubOptions)
